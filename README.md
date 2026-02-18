@@ -20,6 +20,25 @@ This project evolved from a [BoardGameGeek PowerShell script](https://boardgameg
 - Python 3.6+
 - PIL/Pillow library
 
+## Testing
+
+To run the unit and integration tests:
+
+1.  **Install test dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+2.  **Run tests using pytest**:
+    ```bash
+    pytest
+    ```
+
+3.  **Run specific test file**:
+    ```bash
+    pytest test_sagrada_generator.py
+    ```
+
 ## Installation & Setup
 
 1. **Clone the repository**:

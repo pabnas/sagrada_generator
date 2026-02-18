@@ -1,1 +1,6 @@
 /sagrada_output/
+venv/
+__pycache__/
+.pytest_cache/
+test_env/
+.coverage
