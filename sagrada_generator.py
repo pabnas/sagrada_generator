@@ -14,7 +14,6 @@ class CardGenerator:
     SIDE_MARGIN_MM = 2.5
     SQUARE_GAP_MM = 2
 
-    # Calculate square size so 5 squares and 4 gaps fit inside the card.
     SQUARE_SIZE_MM = (
         CARD_WIDTH_MM
         - (
@@ -25,15 +24,24 @@ class CardGenerator:
 
     print(f"Square size: {SQUARE_SIZE_MM} mm")
 
-    # Distance between the bottom of the grid and
-    # the visible top of the text.
+    # Distance between the bottom of the grid and the text
     TEXT_TOP_MARGIN_MM = 3
 
-    # Circle configuration.
+    # Circle configuration
     BALL_DIAMETER_MM = 2.5
 
     ROWS = 4
     COLUMNS = 5
+
+    # Accepted source image formats
+    IMAGE_EXTENSIONS = (
+        ".jpg",
+        ".jpeg",
+        ".JPG",
+        ".JPEG",
+        ".png",
+        ".PNG",
+    )
 
     def __init__(
         self,
@@ -59,10 +67,10 @@ class CardGenerator:
             ball_diameter_px
         )
 
-        # Gap between circles in pixels.
+        # Gap between circles in pixels
         self.ball_spacing = 6
 
-        # Right margin for the rightmost circle in pixels.
+        # Right margin in pixels
         self.ball_right_margin = 50
 
     @classmethod
@@ -76,7 +84,7 @@ class CardGenerator:
 
     def create_ball(self):
         """
-        Create a fully white circle with a transparent background.
+        Create a fully white circle with transparency.
         """
         ball = Image.new(
             mode="RGBA",
@@ -98,29 +106,62 @@ class CardGenerator:
 
         return ball
 
+    def find_tile_path(self, tile_letter):
+        """
+        Find a tile using JPG, JPEG, or PNG.
+        JPG is checked first.
+        """
+        for extension in self.IMAGE_EXTENSIONS:
+            tile_path = os.path.join(
+                self.assets_dir,
+                f"{tile_letter}{extension}"
+            )
+
+            if os.path.isfile(tile_path):
+                return tile_path
+
+        supported = ", ".join(self.IMAGE_EXTENSIONS)
+
+        raise FileNotFoundError(
+            f"No image found for tile '{tile_letter}'. "
+            f"Supported extensions: {supported}"
+        )
+
     def prepare_square_image(
         self,
         image,
         square_size
     ):
         """
-        Convert an image to a square without stretching it.
-
-        The image is cropped from the center while preserving
-        its original proportions, then resized to the required
-        square dimensions.
+        Crop the image to a centered square without distortion,
+        then resize it to the required dimensions.
         """
+        # Apply the orientation stored by phones and cameras
         image = ImageOps.exif_transpose(image)
-        image = image.convert("RGBA")
 
-        square_image = ImageOps.fit(
+        # Convert to RGB because JPEG does not support transparency
+        if image.mode == "RGBA":
+            background = Image.new(
+                "RGB",
+                image.size,
+                "black"
+            )
+
+            background.paste(
+                image,
+                mask=image.getchannel("A")
+            )
+
+            image = background
+        else:
+            image = image.convert("RGB")
+
+        return ImageOps.fit(
             image,
             (square_size, square_size),
             method=Image.Resampling.LANCZOS,
             centering=(0.5, 0.5)
         )
-
-        return square_image
 
     def create_card(
         self,
@@ -164,8 +205,6 @@ class CardGenerator:
             42
         )
 
-        # Always convert the label to uppercase.
-        # text = label.strip().upper()
         text = label
 
         total_balls_line = parameter_file.readline()
@@ -189,7 +228,6 @@ class CardGenerator:
             + (self.ROWS - 1) * square_gap
         )
 
-        # Center the grid horizontally.
         left_margin = (
             card_width - grid_width
         ) // 2
@@ -211,15 +249,9 @@ class CardGenerator:
             for column in range(self.COLUMNS):
                 tile_letter = row_line[column].upper()
 
-                tile_path = os.path.join(
-                    self.assets_dir,
-                    f"{tile_letter}.png"
+                tile_path = self.find_tile_path(
+                    tile_letter
                 )
-
-                if not os.path.exists(tile_path):
-                    raise FileNotFoundError(
-                        f"Tile image not found: {tile_path}"
-                    )
 
                 with Image.open(tile_path) as tile_image:
                     tile_image = self.prepare_square_image(
@@ -245,10 +277,10 @@ class CardGenerator:
                         )
                     )
 
+                    # No transparency mask is necessary for RGB images
                     img.paste(
                         tile_image,
-                        (tile_x, tile_y),
-                        tile_image
+                        (tile_x, tile_y)
                     )
 
         file_card_name = (
@@ -335,13 +367,18 @@ class CardGenerator:
             fill="white"
         )
 
+        # Save the generated card as JPG
         path_card = os.path.join(
             self.output_path,
-            f"{file_card_name}.png"
+            f"{file_card_name}.jpg"
         )
 
         img.save(
             path_card,
+            format="JPEG",
+            quality=100,
+            subsampling=0,
+            optimize=True,
             dpi=(self.DPI, self.DPI)
         )
 
