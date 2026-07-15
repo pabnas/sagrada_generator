@@ -6,10 +6,11 @@ from sagrada_generator import CardGenerator
 
 class TestCardGenerator(unittest.TestCase):
     def setUp(self):
+        self.assets_dir = 'assets'
         self.font_path = 'georgia.ttf'
         self.output_path = 'sagrada_output'
         self.card_file = 'card.txt'
-        self.generator = CardGenerator(self.font_path, self.output_path, self.card_file)
+        self.generator = CardGenerator(self.assets_dir, self.font_path, self.output_path, self.card_file)
 
     @patch('sagrada_generator.Image')
     @patch('sagrada_generator.ImageDraw')
