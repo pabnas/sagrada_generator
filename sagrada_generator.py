@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 
 
@@ -13,16 +13,23 @@ class CardGenerator:
     TOP_MARGIN_MM = 2
     SIDE_MARGIN_MM = 2.5
     SQUARE_GAP_MM = 2
-    # The size of each square is calculated to fit 5 squares
-    # and 4 gaps in the 90 mm width of the card.
-    SQUARE_SIZE_MM = (CARD_WIDTH_MM - ((SIDE_MARGIN_MM*2)+(SQUARE_GAP_MM*4)))/5
+
+    # Calculate square size so 5 squares and 4 gaps fit inside the card.
+    SQUARE_SIZE_MM = (
+        CARD_WIDTH_MM
+        - (
+            SIDE_MARGIN_MM * 2
+            + SQUARE_GAP_MM * 4
+        )
+    ) / 5
+
     print(f"Square size: {SQUARE_SIZE_MM} mm")
 
     # Distance between the bottom of the grid and
-    # the visible top of the text
+    # the visible top of the text.
     TEXT_TOP_MARGIN_MM = 3
 
-    # Circle configuration
+    # Circle configuration.
     BALL_DIAMETER_MM = 2.5
 
     ROWS = 4
@@ -43,7 +50,6 @@ class CardGenerator:
         self.output_path = output_path
         self.card_file = card_file
 
-        # Circle diameter converted from 2.5 mm to pixels.
         ball_diameter_px = self.mm_to_px(
             self.BALL_DIAMETER_MM
         )
@@ -53,10 +59,10 @@ class CardGenerator:
             ball_diameter_px
         )
 
-        # Keep the existing 6-pixel gap between circles.
+        # Gap between circles in pixels.
         self.ball_spacing = 6
 
-        # Right margin for the last circle.
+        # Right margin for the rightmost circle in pixels.
         self.ball_right_margin = 50
 
     @classmethod
@@ -91,6 +97,30 @@ class CardGenerator:
         )
 
         return ball
+
+    def prepare_square_image(
+        self,
+        image,
+        square_size
+    ):
+        """
+        Convert an image to a square without stretching it.
+
+        The image is cropped from the center while preserving
+        its original proportions, then resized to the required
+        square dimensions.
+        """
+        image = ImageOps.exif_transpose(image)
+        image = image.convert("RGBA")
+
+        square_image = ImageOps.fit(
+            image,
+            (square_size, square_size),
+            method=Image.Resampling.LANCZOS,
+            centering=(0.5, 0.5)
+        )
+
+        return square_image
 
     def create_card(
         self,
@@ -134,8 +164,9 @@ class CardGenerator:
             42
         )
 
-        # Always convert the complete label to uppercase.
-        text = label.strip().upper()
+        # Always convert the label to uppercase.
+        # text = label.strip().upper()
+        text = label
 
         total_balls_line = parameter_file.readline()
 
@@ -158,7 +189,7 @@ class CardGenerator:
             + (self.ROWS - 1) * square_gap
         )
 
-        # Center the 83 mm grid horizontally in the 90 mm card.
+        # Center the grid horizontally.
         left_margin = (
             card_width - grid_width
         ) // 2
@@ -191,16 +222,9 @@ class CardGenerator:
                     )
 
                 with Image.open(tile_path) as tile_image:
-                    tile_image = (
-                        tile_image
-                        .convert("RGBA")
-                        .resize(
-                            (
-                                square_size,
-                                square_size
-                            ),
-                            Image.Resampling.LANCZOS
-                        )
+                    tile_image = self.prepare_square_image(
+                        tile_image,
+                        square_size
                     )
 
                     tile_x = (
@@ -238,7 +262,6 @@ class CardGenerator:
                 f"Missing output filename for card '{text}'."
             )
 
-        # Calculate the visible bounds of the text.
         text_bbox = canvas.textbbox(
             (0, 0),
             text,
@@ -253,36 +276,29 @@ class CardGenerator:
             text_bbox[3] - text_bbox[1]
         )
 
-        # Bottom position of the tile grid.
         grid_bottom = (
             top_margin + grid_height
         )
 
-        # Visible top of the text starts 4 mm below the grid.
         visible_text_top = (
             grid_bottom + text_top_margin
         )
 
-        # Center the text horizontally.
         text_x = (
             (card_width - text_width) / 2
             - text_bbox[0]
         )
 
-        # Compensate for the font's internal top bearing.
         text_y = (
             visible_text_top
             - text_bbox[1]
         )
 
-        # Find the vertical center of the visible text.
         text_center_y = (
             visible_text_top
             + text_height / 2
         )
 
-        # Align the center of every circle with the
-        # vertical center of the text.
         ball_y = round(
             text_center_y
             - self.ball_size[1] / 2
@@ -290,7 +306,6 @@ class CardGenerator:
 
         ball = self.create_ball()
 
-        # Position the rightmost circle near the right edge.
         ball_start_x = (
             card_width
             - self.ball_right_margin
@@ -378,7 +393,7 @@ class CardGenerator:
 if __name__ == "__main__":
     card_generator = CardGenerator(
         font_path="georgia.ttf",
-        assets_dir="assets",
+        assets_dir="assets_remastered",
         output_path="sagrada_output",
         card_file="card.txt"
     )
