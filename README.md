@@ -54,7 +54,7 @@ To run the unit and integration tests:
 
 3. **Verify required assets** are present:
    ```
-   ├── UncialAntiqua-Regular.ttf    # Font file
+   ├── georgia.ttf    # Font file
    ├── 1.png, 2.png ... 6.png      # Dice tiles
    ├── R.png, G.png, B.png, P.png, Y.png, W.png  # Color tiles
    └── O.png                        # Difficulty balls
@@ -78,7 +78,7 @@ Modify the script to use a different input file:
 
 ```python
 card_generator = CardGenerator(
-    font_path='UncialAntiqua-Regular.ttf',
+    font_path='georgia.ttf',
     output_path='my_custom_output',
     card_file='my_cards.txt'
 )
@@ -131,7 +131,7 @@ sagrada_generator/
 ├── sagrada_generator.py           # Main generator script
 ├── card.txt                       # Card definitions
 ├── requirements.txt               # Python dependencies
-├── UncialAntiqua-Regular.ttf     # Font file
+├── georgia.ttf     # Font file
 ├── {1-6}.png                     # Dice assets
 ├── {R,G,B,P,Y,W}.png            # Color tile assets
 ├── O.png                         # Ball asset
@@ -156,7 +156,7 @@ sagrada_generator/
 
 **Missing asset files**: Ensure all PNG assets (1-6.png, R.png, G.png, etc.) are in the root directory.
 
-**Font not found**: Verify `UncialAntiqua-Regular.ttf` exists in the project root.
+**Font not found**: Verify `georgia.ttf` exists in the project root.
 
 **Permission errors**: Check write permissions for the output directory.
 

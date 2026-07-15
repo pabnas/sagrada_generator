@@ -11,14 +11,14 @@ class TestSmoke(unittest.TestCase):
         os.makedirs(self.test_dir, exist_ok=True)
         
         # Create dummy assets
-        self.font_path = 'UncialAntiqua-Regular.ttf'
+        self.font_path = 'georgia.ttf'
         # If font doesn't exist (e.g. in CI environment or strict test env), create a dummy one?
         # But for now assume it exists or use default.
         # Pillow default font is loadable via ImageFont.load_default(), but the code uses truetype path.
         # We'll touch a dummy ttf if it doesn't exist, but that might fail to load.
         # Let's mock the font loading ONLY if necessary, but ideally we use real stuff.
         # If the user has the font, we use it. If not, we might fail.
-        # The user has 'UncialAntiqua-Regular.ttf' in the root.
+        # The user has 'georgia.ttf' in the root.
         
         # Copy font to test dir or reference it?
         # The code uses relative paths for images usually?
@@ -62,10 +62,10 @@ class TestSmoke(unittest.TestCase):
 
     def test_end_to_end(self):
         # This runs the REAL generator with REAL Pillow
-        # It requires UncialAntiqua-Regular.ttf to be present in CWD (which it is in the project)
+        # It requires georgia.ttf to be present in CWD (which it is in the project)
         
         generator = CardGenerator(
-            font_path='UncialAntiqua-Regular.ttf', # Assuming this exists in project root
+            font_path='georgia.ttf', # Assuming this exists in project root
             output_path=self.output_path,
             card_file=self.card_file
         )

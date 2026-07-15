@@ -3,8 +3,9 @@ import os
 
 
 class CardGenerator:
-    def __init__(self, font_path, output_path, card_file):
-        self.font_path = font_path
+    def __init__(self, assets_dir, font_path, output_path, card_file):
+        self.assets_dir = assets_dir
+        self.font_path = os.path.join(assets_dir, font_path)
         self.output_path = output_path
         self.card_file = card_file
         self.ball_image = 'O.png'
@@ -20,12 +21,12 @@ class CardGenerator:
         for row in range(4):
             row_line = parameter_file.readline().strip()
             for column in range(5):
-                with Image.open(f'{row_line[column].upper()}.png') as tile_image:
+                with Image.open(os.path.join(self.assets_dir, f'{row_line[column].upper()}.png')) as tile_image:
                     (height, width) = tile_image.size
                     pos = (25 * (column + 1) + width * column, 20 * (row + 1) + height * row)
                     img.paste(tile_image, pos)
 
-        with Image.open(self.ball_image) as ball:
+        with Image.open(os.path.join(self.assets_dir, self.ball_image)) as ball:
             ball_size = ball.size
             for n_ball in range(total_balls):
                 img.paste(ball, (995 - n_ball * (ball_size[0] + 6), 820))
@@ -56,7 +57,8 @@ class CardGenerator:
 
 if __name__ == '__main__':
     card_generator = CardGenerator(
-        font_path='UncialAntiqua-Regular.ttf',
+        font_path='georgia.ttf',
+        assets_dir='assets',
         output_path='sagrada_output',
         card_file='card.txt'
     )

@@ -6,7 +6,7 @@ from sagrada_generator import CardGenerator
 
 class TestCardGenerator(unittest.TestCase):
     def setUp(self):
-        self.font_path = 'UncialAntiqua-Regular.ttf'
+        self.font_path = 'georgia.ttf'
         self.output_path = 'sagrada_output'
         self.card_file = 'card.txt'
         self.generator = CardGenerator(self.font_path, self.output_path, self.card_file)
