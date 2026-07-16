@@ -8,7 +8,7 @@ A Python-based card generator for creating print-and-play (PnP) cards for the Sa
 - 🎲 **Complete Tile System**: Support for numbered dice (1-6) and colored constraint tiles
 - 📐 **Precise Layout**: 4×5 grid positioning with proper spacing
 - 🎯 **Difficulty Indicators**: Visual ball system for card difficulty rating
-- 🖋️ **Custom Typography**: UncialAntiqua font for authentic card styling
+- 🖋️ **Custom Typography**: Any font can be used
 - 📦 **Batch Processing**: Generate multiple cards from a single input file
 
 ## Project Origin
@@ -47,17 +47,23 @@ To run the unit and integration tests:
    cd sagrada_generator
    ```
 
-2. **Install dependencies**:
+2. **Install virtual environment (optional but recommended)**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Verify required assets** are present:
+4. **Verify required assets** are present:
    ```
+   assets/
    ├── georgia.ttf    # Font file
    ├── 1.png, 2.png ... 6.png      # Dice tiles
-   ├── R.png, G.png, B.png, P.png, Y.png, W.png  # Color tiles
-   └── O.png                        # Difficulty balls
+   └── R.png, G.png, B.png, P.png, Y.png, W.png  # Color tiles
    ```
 
 ## Usage
@@ -78,9 +84,10 @@ Modify the script to use a different input file:
 
 ```python
 card_generator = CardGenerator(
-    font_path='georgia.ttf',
+    assets_dir="assets_remastered",
+    font_path='georgia.ttf', # This font has to be inside the selected assets directory
     output_path='my_custom_output',
-    card_file='my_cards.txt'
+    card_file='my_cards.txt',
 )
 ```
 
@@ -95,34 +102,39 @@ Vitraux          ← Card name (displayed on card)
 wg6pw            ← Row 2: 5 characters
 yw1wb            ← Row 3: 5 characters
 w5w4w            ← Row 4: 5 characters
-1A               ← Output filename (without .png)
+1A               ← Output filename (without extension)
 ```
 
 ### Character Mapping
 
 | Character | Tile Type | Image File |
 |-----------|-----------|------------|
-| `1`-`6`   | Numbered dice | `1.png` - `6.png` |
-| `w`       | White/empty space | `W.png` |
-| `r`       | Red constraint | `R.png` |
-| `g`       | Green constraint | `G.png` |
-| `b`       | Blue constraint | `B.png` |
-| `p`       | Purple constraint | `P.png` |
-| `y`       | Yellow constraint | `Y.png` |
+| `1`-`6`   | Numbered dice | `1` - `6` |
+| `w`       | White/empty space | `W` |
+| `r`       | Red constraint | `R` |
+| `g`       | Green constraint | `G` |
+| `b`       | Blue constraint | `B` |
+| `p`       | Purple constraint | `P` |
+| `y`       | Yellow constraint | `Y` |
+| `a`       | Artesan symbol | `A` |
 
 ### Example Card Definition
 
-```
-Aurora Sagradis
-4
-2g3r6
-y1b4p
-5w2g1
-p6y3b
-aurora_sagradis
-```
 
-This creates a card named "Aurora Sagradis" with difficulty 4, saves as `aurora_sagradis.png`.
+The resulting cards will be saved in `my_custom_output/`.
+For example 
+```txt
+APRICITAS
+6
+12345
+yrbpg
+12345
+6awww
+test
+```
+Will result in a card named "APRICITAS" with difficulty 6, saved as `test.jpg`.
+
+![Main Dashboard Screenshot](docs/test.jpg)
 
 ## File Structure
 
@@ -131,32 +143,31 @@ sagrada_generator/
 ├── sagrada_generator.py           # Main generator script
 ├── card.txt                       # Card definitions
 ├── requirements.txt               # Python dependencies
-├── georgia.ttf     # Font file
-├── {1-6}.png                     # Dice assets
-├── {R,G,B,P,Y,W}.png            # Color tile assets
-├── O.png                         # Ball asset
 └── sagrada_output/               # Generated cards (created at runtime)
-    ├── 1A.png
-    ├── 1B.png
+    ├── 1A.jpg
+    ├── 1B.jpg
     └── ...
+└── assets/
+    ├── georgia.ttf     # Font file
+    ├── {1-6}.png or .jpg                    # Dice assets
+    └── {R,G,B,P,Y,W}.png or .jpg            # Color tile assets
+
 ```
 
 ## Technical Specifications
 
-- **Card Dimensions**: 1055×934 pixels base + 59px bleed (1173×1052 total)
+- **Card Dimensions**: 90mm × 140mm (3.54in × 5.51in)
 - **Print Resolution**: 300 DPI
 - **Grid Layout**: 4 rows × 5 columns
-- **Spacing**: 25px horizontal, 20px vertical
-- **Typography**: 42px UncialAntiqua, centered, white text
-- **Output Format**: PNG with embedded DPI metadata
+- **Spacing**: 2mm between tiles
+- **Typography**: 42px , centered, white text
+- **Output Format**: JPG with embedded DPI metadata
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Missing asset files**: Ensure all PNG assets (1-6.png, R.png, G.png, etc.) are in the root directory.
-
-**Font not found**: Verify `georgia.ttf` exists in the project root.
+**Missing asset files**: Ensure all PNG assets (1-6.png, R.png, G.png, etc.) are in the assets directory.
 
 **Permission errors**: Check write permissions for the output directory.
 
