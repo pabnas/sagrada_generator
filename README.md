@@ -156,7 +156,7 @@ sagrada_generator/
 
 ## Technical Specifications
 
-- **Card Dimensions**: 90mm × 140mm (3.54in × 5.51in)
+- **Card Dimensions**: 90mm × 80mm (3.54in × 5.51in)
 - **Print Resolution**: 300 DPI
 - **Grid Layout**: 4 rows × 5 columns
 - **Spacing**: 2mm between tiles
