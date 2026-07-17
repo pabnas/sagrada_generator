@@ -1,82 +1,68 @@
-
 import unittest
 import os
 import shutil
-from PIL import Image, ImageDraw
+from PIL import Image, ImageFont
+from unittest.mock import patch
 from sagrada_generator import CardGenerator
+
+# Load the default font ONCE before any mock is applied.
+# This avoids the RecursionError where load_default() calls the patched truetype().
+DEFAULT_FONT = ImageFont.load_default(size=42)
+
+def fake_truetype(*args, **kwargs):
+    """Dynamically return the pre-loaded default font to bypass missing TTF files."""
+    return DEFAULT_FONT
 
 class TestSmoke(unittest.TestCase):
     def setUp(self):
+        # Create a contained test directory structure
         self.test_dir = 'test_env'
-        os.makedirs(self.test_dir, exist_ok=True)
+        self.assets_dir = os.path.join(self.test_dir, 'assets_remastered')
+        self.output_path = os.path.join(self.test_dir, 'smoke_output')
         
-        # Create dummy assets
-        self.font_path = 'georgia.ttf'
-        # If font doesn't exist (e.g. in CI environment or strict test env), create a dummy one?
-        # But for now assume it exists or use default.
-        # Pillow default font is loadable via ImageFont.load_default(), but the code uses truetype path.
-        # We'll touch a dummy ttf if it doesn't exist, but that might fail to load.
-        # Let's mock the font loading ONLY if necessary, but ideally we use real stuff.
-        # If the user has the font, we use it. If not, we might fail.
-        # The user has 'georgia.ttf' in the root.
+        os.makedirs(self.assets_dir, exist_ok=True)
         
-        # Copy font to test dir or reference it?
-        # The code uses relative paths for images usually?
-        # The code: Image.open(f'{row_line[column].upper()}.png')
-        # It looks in CWD.
-        # So we should run tests in a way that CWD has images.
-        
-        # Let's create dummy images in current directory (or handle cleanup carefully)
-        self.created_files = []
-        
-        colors = ['R', 'G', 'B', 'Y', 'P', 'W', 'O', 'A'] # Add others if needed
+        # Create valid dummy images exactly where the generator expects them
+        colors = ['R', 'G', 'B', 'Y', 'P', 'W', 'O', 'A']
         for c in colors:
             img = Image.new('RGB', (10, 10), color='white')
-            filename = f"{c}.png"
-            if not os.path.exists(filename):
-                img.save(filename)
-                self.created_files.append(filename)
+            filename = os.path.join(self.assets_dir, f"{c}.png")
+            img.save(filename)
             
         # Create card.txt
-        self.card_file = 'smoke_card.txt'
+        self.card_file = os.path.join(self.test_dir, 'smoke_card.txt')
         with open(self.card_file, 'w') as f:
             f.write("Smoke Test\n")
-            f.write("1\n") # 1 ball
+            f.write("1\n") 
             f.write("RGBRY\n")
             f.write("RGBRY\n")
             f.write("RGBRY\n")
             f.write("RGBRY\n")
             f.write("smoke_output\n")
-            f.write("") # Next label empty
-
-        self.output_path = 'smoke_output'
+            f.write("\n") # Next label empty to stop generation
 
     def tearDown(self):
-        for f in self.created_files:
-            if os.path.exists(f):
-                os.remove(f)
-        if os.path.exists(self.card_file):
-            os.remove(self.card_file)
-        if os.path.exists(self.output_path):
-            shutil.rmtree(self.output_path)
+        # Clean up everything at once by removing the test directory
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
 
-    def test_end_to_end(self):
-        # This runs the REAL generator with REAL Pillow
-        # It requires georgia.ttf to be present in CWD (which it is in the project)
-        
+    @patch('sagrada_generator.ImageFont.truetype', side_effect=fake_truetype)
+    def test_end_to_end(self, mock_truetype):
         generator = CardGenerator(
-            font_path='georgia.ttf', # Assuming this exists in project root
+            font_path='georgia.ttf',
             output_path=self.output_path,
-            card_file=self.card_file
+            card_file=self.card_file,
+            assets_dir=self.assets_dir
         )
         
+        # Run end-to-end generation
         generator.generate_cards()
         
         # Verify output exists
-        expected_file = os.path.join(self.output_path, 'smoke_output.png')
+        expected_file = os.path.join(self.output_path, 'smoke_output.jpg')
         self.assertTrue(os.path.exists(expected_file))
         
-        # Verify it's an image
+        # Verify it's a real image that was successfully compiled
         with Image.open(expected_file) as img:
             self.assertIsNotNone(img)
             self.assertGreater(img.width, 0)
